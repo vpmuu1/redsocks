@@ -1,3 +1,64 @@
+same as darkk/redsocks,but add support to connect to hostname like https://luminati.io/patent-marki socks5 server needed!
+
+just modify socks5_mkcommand_plain in socks5.c
+
+any support qq:624183712
+
+struct evbuffer *socks5_mkcommand_plain(int socks5_cmd, const struct sockaddr_in *destaddr)
+{
+        struct {
+                socks5_req head;
+                socks5_addr_ipv4 ip;
+        } PACKED req;
+
+        struct {
+                socks5_req head;
+                char domain[200];
+        } PACKED req1;
+
+        int rc;
+        char buf[64];
+
+        assert(destaddr->sin_family == AF_INET);
+
+        if (socks5_cmd==socks5_cmd_connect) {
+          bzero(&req1, sizeof(req1));
+
+          req1.head.ver = socks5_ver;
+          req1.head.cmd = socks5_cmd;
+          req1.head.reserved = 0;
+          req1.head.addrtype = socks5_addrtype_domain;
+
+
+rc=0;
+          if (rc==0) {
+            bzero(buf, sizeof(buf));
+
+            rc=memcache(destaddr->sin_addr.s_addr,buf);
+            if (rc==1) {
+                sprintf(&req1.domain[1],"%s",buf);
+                req1.domain[0]=strlen(&req1.domain[1])-0;
+                req1.domain[req1.domain[0]+1]=destaddr->sin_port%256;
+                req1.domain[req1.domain[0]+2]=destaddr->sin_port/256;
+
+                printf("port=%d\n",destaddr->sin_port);
+                mylog((char*)&req1,sizeof(req1));
+                return mkevbuffer(&req1, req1.domain[0]+7);
+				
+            }
+         }
+        }
+
+        req.head.ver = socks5_ver;
+        req.head.cmd = socks5_cmd;
+        req.head.reserved = 0;
+        req.head.addrtype = socks5_addrtype_ipv4;
+        req.ip.addr = destaddr->sin_addr.s_addr;
+        req.ip.port = destaddr->sin_port;
+        return mkevbuffer(&req, sizeof(req));
+}
+
+
 # redsocks – transparent TCP-to-proxy redirector
 
 This tool allows you to redirect any TCP connection to SOCKS or HTTPS
