@@ -4,6 +4,8 @@ just modify socks5_mkcommand_plain in socks5.c
 
 any support qq:624183712
 
+///begin
+
 struct evbuffer *socks5_mkcommand_plain(int socks5_cmd, const struct sockaddr_in *destaddr)
 {
         struct {
@@ -34,17 +36,14 @@ rc=0;
           if (rc==0) {
             bzero(buf, sizeof(buf));
 
-            rc=memcache(destaddr->sin_addr.s_addr,buf);
+            rc=ip2name(destaddr->sin_addr.s_addr,buf);
             if (rc==1) {
                 sprintf(&req1.domain[1],"%s",buf);
                 req1.domain[0]=strlen(&req1.domain[1])-0;
                 req1.domain[req1.domain[0]+1]=destaddr->sin_port%256;
                 req1.domain[req1.domain[0]+2]=destaddr->sin_port/256;
 
-                printf("port=%d\n",destaddr->sin_port);
-                mylog((char*)&req1,sizeof(req1));
-                return mkevbuffer(&req1, req1.domain[0]+7);
-				
+                return mkevbuffer(&req1, req1.domain[0]+7);				
             }
          }
         }
@@ -58,6 +57,7 @@ rc=0;
         return mkevbuffer(&req, sizeof(req));
 }
 
+///////end
 
 # redsocks – transparent TCP-to-proxy redirector
 
